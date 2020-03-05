@@ -10,7 +10,7 @@
 			How many facts would you like?
 		</label>
 		
-		<input type="number" name="fact-count" id="fact-count" placeholder="Number Of Facts" min="0" max="{{ $max ?? 0 }}">
+		<input type="number" name="fact-count" id="fact-count" placeholder="Number Of Facts" min="1" max="{{ $limit }}" required autofocus>
 		
 		<button type="submit">
 			Submit

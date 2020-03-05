@@ -14,3 +14,5 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', 'CatFacts@form');
+
+Route::post('/', 'CatFacts@pdf');
