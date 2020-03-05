@@ -1,0 +1,26 @@
+* {
+	box-sizing: border-box;
+}
+
+:root {
+	font-size: 24px;
+}
+
+button,
+input,
+label
+{
+	display: block;
+	font-size: 1rem;
+	margin: 0.25em 0;
+}
+
+input,
+label
+{
+	width: 100%;
+}
+
+input {
+	padding: 0.25em;
+}
