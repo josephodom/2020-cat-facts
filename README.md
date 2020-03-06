@@ -8,25 +8,29 @@ You'll notice that there are only a few files in this repo. I only included the 
 
 ### Controllers
 
-There is a single controller: `CatFacts`. It contains two public methods & a private method.
+There is a single controller: `CatFacts`. It contains three public methods & a private method.
 
 ### Routes
 
-There are two routes. Both are on `/`. One is `GET`, one is `POST`.
+There are three routes.
 
-The `GET` route displays a form for requesting a given number of cat facts.
+`GET:/` displays a form for requesting a given number of cat facts.
 
-The `POST` route grabs your requested number of facts & outputs a PDF listing them out. Or, if there's an issue, outputs a PDF that describes the error.
+`POST:/` route grabs your requested number of facts & outputs a PDF listing them out. Or, if there's an issue, outputs a PDF that describes the error.
+
+`GET:/past` grabs all of your past PDFs & paginates them. It also orders them by fact count, descending.
 
 Both routes are defined in `routes/web.php`.
 
 ### Views
 
-There are two views.
+There are three views.
 
 `catfacts.template` is a basic HTML template for catfacts pages that pulls in the catfacts CSS & yields `content`.
 
 `catfacts.form` contains the HTML for the cat fact request form, and accepts a variable called `$limit` so the form can request a limited number of cat facts, or defaults to 20 if no limit is given.
+
+`catfacts.past` displays the past-requested PDFs & paginates them.
 
 ### Assets
 
@@ -34,8 +38,10 @@ A single CSS file was added called `public/css/catfacts.css`. It isn't very long
 
 ### Models
 
-No models! No database anything!
+There is a single model `Pdf` for saving PDF requests in the database.
+
+Initially I opted to just save them on disk & sort through them by filename, but I figured it would be a better test of my Laravel experience to save them in the DB.
 
 ### .env
 
-I didn't change the `.env` from the example at all.
+I only changed the `.env` from the example to connect it to my local database.

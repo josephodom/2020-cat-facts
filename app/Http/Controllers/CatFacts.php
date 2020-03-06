@@ -149,7 +149,7 @@ class CatFacts extends Controller
      * @return string
      */
     public function past() : string {
-        $pdfs = Pdf::orderBy('id', 'desc')->paginate(10);
+        $pdfs = Pdf::orderBy('count', 'desc')->paginate(10);
         
         return view('catfacts.past', [
             'pdfs' => $pdfs,
