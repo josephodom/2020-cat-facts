@@ -25,17 +25,19 @@ class CatFacts extends Controller
     }
     
     /**
-     * Route that grabs the cat facts & compiles them into a PDF
+     * Route that intends to grab the cat facts & compiles them into a PDF
+     * Unhappy conditions still output a PDF, just not one with the data you're after
      *
      * @param Request $request
-     * @return string
+     * @return void
      */
-    public function pdf(Request $request) : string {
+    public function pdf(Request $request) : void {
         $limit = $request->input('fact-count');
         
         // If $limit isn't an integer, return an error
         if(!is_numeric($limit) || intval($limit) != $limit){
-            $this->producePDF('ERROR: Given fact-count is not a valid integer!');
+            // Still outputs a PDF, just one explaining that there was an error
+            $this->producePDF('Error', 'Given fact-count is not a valid integer!');
         }
         
         $limit = intval($limit);
@@ -46,24 +48,65 @@ class CatFacts extends Controller
         
         // Get the facts from the API endpoint
         // Since it's a simple GET request, we'll use file_get_contents instead of curl
-        $facts = file_get_contents('https://catfact.ninja/facts?limit=' . $limit);
+        $factsJSONString = file_get_contents('https://catfact.ninja/facts?limit=' . $limit);
         
         // Attempt to decode the facts string as JSON
-        $facts = json_decode($facts);
+        $factsJSON = json_decode($factsJSONString);
         
         // If we didn't get valid JSON, return an error
-        if($facts === null){
-            $this->producePDF('ERROR: There was an error processing your cat facts. Sorry :(');
+        if($factsJSON === null || empty($factsJSON->data)){
+            // Still outputs a PDF, just one explaining that there was an error
+            $this->producePDF('Error', 'There was an error processing your cat facts. Sorry :(');
         }
         
-        // For now, we're just die-ing the info we have so far
-        die('<pre>' . print_r([
-            'limit' => $request->input('fact-count'),
-            'facts' => $facts,
-        ], true) . '</pre>');
+        // For storing the facts closer to human readability
+        // We'll have one fact per index, then implode the facts
+        $facts = [];
+        
+        // Cycle through the facts JSON
+        foreach($factsJSON->data as $key => $fact){
+            // Add the fact number to the beginning of the fact
+            $facts[] = (++$key) . ') ' . $fact->fact;
+        }
+        
+        // Output the facts in a PDF
+        $this->producePDF(
+            // Title; i.e. if you ask for 5 cat facts, this will say "5 Cat Facts!"
+            $limit . ' Cat Facts!',
+            // Space the facts out a little
+            implode("\n\n", $facts)
+        );
     }
     
-    private function producePDF($data){
-        die($data);
+    /**
+     * Outputs a PDF with the given title & body. Exits
+     *
+     * @param string $title
+     * @param string $data
+     * @return void
+     */
+    private function producePDF(string $title, string $data) : void {
+        // Pull in the PDF library
+        require_once base_path('vendor/fpdf/fpdf.php');
+        
+        // Create the PDF object
+        $pdf = new \FPDF();
+        
+        // Create a PDF page
+        $pdf->AddPage();
+        
+        // Write our title in large print
+        $pdf->SetFont('Arial', '', 24);
+        $pdf->MultiCell(0, 18, $title, 24);
+        
+        // Now write our facts in medium print
+        $pdf->SetFont('Arial', '', 14);
+        $pdf->MultiCell(0, 7, $data);
+        
+        // Output the PDF
+        $pdf->Output();
+        
+        // Die, just in case. Nothing else should happen from here on out
+        die();
     }
 }
