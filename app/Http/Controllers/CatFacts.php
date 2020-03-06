@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Pdf;
 use Illuminate\Http\Request;
 
 class CatFacts extends Controller
@@ -69,6 +70,16 @@ class CatFacts extends Controller
             $facts[] = (++$key) . ') ' . $fact->fact;
         }
         
+        // Generate a filename for the PDF
+        $filename = $limit . '_' . time() . '_' . mt_rand(111, 999);
+        
+        // Stage a Pdf model entry
+        // If the PDF file saves properly, this function will run save() on the model
+        // If not, junk data doesn't go into the DB!
+        $pdf = new Pdf();
+        $pdf->count = $limit;
+        $pdf->filename = $filename;
+        
         // Output the facts in a PDF
         $this->producePDF(
             // Title; i.e. if you ask for 5 cat facts, this will say "5 Cat Facts!"
@@ -76,7 +87,7 @@ class CatFacts extends Controller
             // Space the facts out a little
             implode("\n\n", $facts),
             // Save successful PDFs with this filename
-            $limit . '_' . time() . '_' . mt_rand(111, 999)
+            $pdf
         );
     }
     
@@ -88,7 +99,7 @@ class CatFacts extends Controller
      * @param string $filename
      * @return void
      */
-    private function producePDF(string $title, string $data, string $filename = null) : void {
+    private function producePDF(string $title, string $data, Pdf $pdfModel = null) : void {
         // Pull in the PDF library
         require_once base_path('vendor/fpdf/fpdf.php');
         
@@ -110,26 +121,38 @@ class CatFacts extends Controller
         $pdf->SetFont('Arial', '', 14);
         $pdf->MultiCell(0, 7, $data);
         
-        if($filename !== NULL){
-            ob_start();
-        }
-        
-        // Output the PDF
+        // Output the PDF & capture it in a string
+        // This is just in case we want to save it
+        ob_start();
         $pdf->Output();
+        $output = ob_get_clean();
         
-        if($filename !== NULL){
-            $output = ob_get_clean();
+        // Start capturing the
+        if($pdfModel !== NULL){
+            $fileSuccess = @file_put_contents(base_path('public/pdf/' . $pdfModel->filename . '.pdf'), $output);
             
-            echo $output;
+            if($fileSuccess === false){
+                $this->producePDF('Error', 'Could not save PDF file!');
+            }
             
-            file_put_contents(base_path('public/pdf/' . $filename . '.pdf'), $output);
+            $pdfModel->save();
         }
         
-        // Die, just in case. Nothing else should happen from here on out
-        die();
+        // If we don't exit, it interferes with the data
+        // It won't display as a PDF
+        die($output);
     }
     
+    /**
+     * Retrieves & displays past cat facts PDFs
+     *
+     * @return string
+     */
     public function past() : string {
-        return 'nothing yet';
+        $pdfs = Pdf::orderBy('id', 'desc')->paginate(10);
+        
+        return view('catfacts.past', [
+            'pdfs' => $pdfs,
+        ]);
     }
 }
