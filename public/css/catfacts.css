@@ -24,3 +24,7 @@ label
 input {
 	padding: 0.25em;
 }
+
+fieldset {
+	margin-bottom: 1em;
+}

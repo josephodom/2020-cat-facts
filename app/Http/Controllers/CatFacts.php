@@ -74,20 +74,27 @@ class CatFacts extends Controller
             // Title; i.e. if you ask for 5 cat facts, this will say "5 Cat Facts!"
             $limit . ' Cat Facts!',
             // Space the facts out a little
-            implode("\n\n", $facts)
+            implode("\n\n", $facts),
+            // Save successful PDFs with this filename
+            $limit . '_' . time() . '_' . mt_rand(111, 999)
         );
     }
     
     /**
-     * Outputs a PDF with the given title & body. Exits
+     * Outputs a PDF with the given title & body. Exits. Saves the PDF, if you explicitly give it a filename.
      *
      * @param string $title
      * @param string $data
+     * @param string $filename
      * @return void
      */
-    private function producePDF(string $title, string $data) : void {
+    private function producePDF(string $title, string $data, string $filename = null) : void {
         // Pull in the PDF library
         require_once base_path('vendor/fpdf/fpdf.php');
+        
+        // Sanitize strings for PDFs
+        $title = iconv('UTF-8', 'windows-1252', $title);
+        $data = iconv('UTF-8', 'windows-1252', $data);
         
         // Create the PDF object
         $pdf = new \FPDF();
@@ -103,10 +110,26 @@ class CatFacts extends Controller
         $pdf->SetFont('Arial', '', 14);
         $pdf->MultiCell(0, 7, $data);
         
+        if($filename !== NULL){
+            ob_start();
+        }
+        
         // Output the PDF
         $pdf->Output();
         
+        if($filename !== NULL){
+            $output = ob_get_clean();
+            
+            echo $output;
+            
+            file_put_contents(base_path('public/pdf/' . $filename . '.pdf'), $output);
+        }
+        
         // Die, just in case. Nothing else should happen from here on out
         die();
+    }
+    
+    public function past() : string {
+        return 'nothing yet';
     }
 }

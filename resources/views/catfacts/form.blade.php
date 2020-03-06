@@ -17,6 +17,10 @@
 		</button>
 	</fieldset>
 	
+	<a href="{{ url('/past') }}">
+		Psst! Click here to see past facts!
+	</a>
+	
 	@csrf
 </form>
 
